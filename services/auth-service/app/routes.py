@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from sqlalchemy.exc import IntegrityError
+from app.metrics import REQUEST_COUNT
 
 from app.database import SessionLocal
 from app.models import User
@@ -30,6 +31,8 @@ def register(username: str, password: str):
         db.add(user)
         db.commit()
 
+        REQUEST_COUNT.labels(endpoint="/register").inc()
+
         return {"message": "User created"}
     except IntegrityError:
         db.rollback()
@@ -49,6 +52,8 @@ def login(username: str, password: str):
 
         if not verify_password(password, user.password):
             raise HTTPException(status_code=401, detail="Invalid username or password")
+
+        REQUEST_COUNT.labels(endpoint="/login").inc()
 
         token = create_access_token({"sub": username})
 

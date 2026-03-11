@@ -1,11 +1,7 @@
-from prometheus_client import Counter, Histogram
+from prometheus_client import Counter
 
 REQUEST_COUNT = Counter(
     "auth_requests_total",
-    "Total number of auth requests"
-)
-
-REQUEST_LATENCY = Histogram(
-    "auth_request_latency_seconds",
-    "Latency of auth requests"
+    "Total number of requests to auth service endpoints",
+    ["endpoint"]
 )

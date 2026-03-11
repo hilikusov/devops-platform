@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import Response
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from app.metrics import REQUEST_COUNT
 
 from app.database import SessionLocal
 from app.models import Product
@@ -23,6 +24,7 @@ def metrics():
 def get_products():
     db = SessionLocal()
     try:
+        REQUEST_COUNT.labels(endpoint="/products_get").inc()
         products = db.query(Product).all()
         return products
     finally:
@@ -45,6 +47,8 @@ def create_product(name: str, price: int, authorization: str = Header(None)):
         product = Product(name=name, price=price)
         db.add(product)
         db.commit()
+        
+        REQUEST_COUNT.labels(endpoint="/products_post").inc()
 
         return {
             "message": "Product created",
