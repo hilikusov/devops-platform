@@ -1,0 +1,44 @@
+# Virtual environments
+
+**/venv/
+**/.venv/
+
+# Python cache
+
+**/**pycache**/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment files
+
+.env
+*.env
+
+# IDE/editor files
+
+.vscode/
+.idea/
+
+# OS files
+
+.DS_Store
+Thumbs.db
+
+# Python tooling caches
+
+.pytest_cache/
+.mypy_cache/
+
+# Coverage / reports
+
+.coverage
+htmlcov/
+
+# Local database files (if ever used later)
+
+*.db
+
+# Logs
+
+*.log

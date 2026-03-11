@@ -1,0 +1,43 @@
+services:
+  auth-service:
+    build: ./services/auth-service
+    container_name: auth-service
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=devuser
+      - DB_PASSWORD=devpass
+      - DB_NAME=authdb
+    depends_on:
+      - postgres
+
+  product-service:
+    build: ./services/product-service
+    container_name: product-service
+    ports:
+      - "8001:8000"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=devuser
+      - DB_PASSWORD=devpass
+      - DB_NAME=authdb
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15
+    container_name: auth-postgres
+    environment:
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpass
+      POSTGRES_DB: authdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
