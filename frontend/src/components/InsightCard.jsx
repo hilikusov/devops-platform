@@ -1,5 +1,30 @@
 import { motion } from 'framer-motion'
 
+function formatPattern(pattern) {
+  if (!pattern) return '--'
+
+  const labels = {
+    persistently_low: 'Persistently low',
+    persistently_positive: 'Persistently positive',
+    mixed: 'Mixed',
+    neutral: 'Neutral',
+  }
+
+  return labels[pattern] || pattern
+}
+
+function formatTrend(trend) {
+  if (!trend) return '--'
+
+  const labels = {
+    declining: 'Declining',
+    improving: 'Improving',
+    stable: 'Stable',
+  }
+
+  return labels[trend] || trend
+}
+
 function InsightCard({ insight }) {
   if (!insight) return null
 
@@ -60,7 +85,9 @@ function InsightCard({ insight }) {
           <span style={badgeStyle}>Recent avg: {insight.recent_average}</span>
         )}
 
-        <span style={badgeStyle}>Trend: {insight.trend}</span>
+        <span style={badgeStyle}>Trend: {formatTrend(insight.trend)}</span>
+
+        <span style={badgeStyle}>Pattern: {formatPattern(insight.pattern)}</span>
       </div>
     </motion.div>
   )
