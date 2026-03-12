@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.routes import router
 from app.database import engine
 from app.models import Base
@@ -6,15 +7,19 @@ import time
 
 app = FastAPI(title="Auth Service")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 for attempt in range(10):
     try:
         Base.metadata.create_all(bind=engine)
-        print("Database connected and tables created.")
         break
-    except Exception as e:
-        print(f"Database not ready yet, retrying... ({attempt + 1}/10)")
+    except Exception:
         time.sleep(2)
-else:
-    raise Exception("Could not connect to the database after several attempts.")
 
 app.include_router(router)
