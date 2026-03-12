@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 
-function EntryCard({ entry }) {
+function EntryCard({ entry, onEdit, onDelete }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 18 }}
@@ -55,17 +55,62 @@ function EntryCard({ entry }) {
         {entry.content}
       </p>
 
-      <p
+      <div
         style={{
-          color: '#64748b',
-          fontSize: '13px',
-          margin: 0
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '12px'
         }}
       >
-        {new Date(entry.created_at).toLocaleString()}
-      </p>
+        <p
+          style={{
+            color: '#64748b',
+            fontSize: '13px',
+            margin: 0
+          }}
+        >
+          {new Date(entry.created_at).toLocaleString()}
+        </p>
+
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            onClick={() => onEdit(entry)}
+            style={secondaryActionStyle}
+          >
+            Edit
+          </button>
+
+          <button
+            onClick={() => onDelete(entry)}
+            style={dangerActionStyle}
+          >
+            Delete
+          </button>
+        </div>
+      </div>
     </motion.div>
   )
+}
+
+const secondaryActionStyle = {
+  padding: '8px 12px',
+  borderRadius: '12px',
+  border: '1px solid rgba(148,163,184,0.2)',
+  background: '#0f172a',
+  color: '#e2e8f0',
+  fontWeight: 600,
+  cursor: 'pointer'
+}
+
+const dangerActionStyle = {
+  padding: '8px 12px',
+  borderRadius: '12px',
+  border: '1px solid rgba(248,113,113,0.25)',
+  background: 'rgba(127,29,29,0.18)',
+  color: '#fca5a5',
+  fontWeight: 600,
+  cursor: 'pointer'
 }
 
 export default EntryCard

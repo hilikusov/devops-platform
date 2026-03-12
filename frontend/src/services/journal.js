@@ -11,3 +11,15 @@ export async function createEntry(entryData) {
   })
   return response.data
 }
+
+export async function updateEntry(entryId, entryData) {
+  const response = await journalApi.put(`/entries/${entryId}`, null, {
+    params: entryData,
+  })
+  return response.data
+}
+
+export async function deleteEntry(entryId) {
+  const response = await journalApi.delete(`/entries/${entryId}`)
+  return response.data
+}

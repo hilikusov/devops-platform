@@ -14,8 +14,11 @@ function EntryModal({
   setMoodScore,
   onSubmit,
   submitting,
-  error
+  error,
+  mode = 'create'
 }) {
+  const isEdit = mode === 'edit'
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -34,9 +37,13 @@ function EntryModal({
           >
             <div style={headerStyle}>
               <div>
-                <h2 style={{ margin: 0 }}>New reflection</h2>
+                <h2 style={{ margin: 0 }}>
+                  {isEdit ? 'Edit reflection' : 'New reflection'}
+                </h2>
                 <p style={subTextStyle}>
-                  Capture your thoughts in a calm private space.
+                  {isEdit
+                    ? 'Refine or update your reflection.'
+                    : 'Capture your thoughts in a calm private space.'}
                 </p>
               </div>
 
@@ -75,7 +82,9 @@ function EntryModal({
                 </button>
 
                 <button type="submit" style={primaryButtonStyle} disabled={submitting}>
-                  {submitting ? 'Saving...' : 'Save Entry'}
+                  {submitting
+                    ? (isEdit ? 'Saving...' : 'Saving...')
+                    : (isEdit ? 'Save Changes' : 'Save Entry')}
                 </button>
               </div>
             </form>

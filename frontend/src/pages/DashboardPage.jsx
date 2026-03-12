@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { removeToken } from '../services/auth'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { fetchEntries, createEntry } from '../services/journal'
+import { fetchEntries, createEntry, updateEntry, deleteEntry } from '../services/journal'
 import EntryCard from '../components/EntryCard'
 import EntryModal from '../components/EntryModal'
 import MoodTrendChart from '../components/MoodTrendChart'
@@ -16,6 +16,7 @@ function DashboardPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingEntry, setEditingEntry] = useState(null)
 
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -49,9 +50,10 @@ function DashboardPage() {
     setMoodLabel('calm')
     setMoodScore(4)
     setError('')
+    setEditingEntry(null)
   }
 
-  const handleCreateEntry = async (e) => {
+  const handleSubmitEntry = async (e) => {
     e.preventDefault()
     setError('')
 
@@ -63,22 +65,53 @@ function DashboardPage() {
     try {
       setSubmitting(true)
 
-      await createEntry({
+      const payload = {
         title,
         content,
         mood_score: moodScore,
         mood_label: moodLabel,
-      })
+      }
 
-      toast.success('Journal entry saved')
+      if (editingEntry) {
+        await updateEntry(editingEntry.id, payload)
+        toast.success('Journal entry updated')
+      } else {
+        await createEntry(payload)
+        toast.success('Journal entry saved')
+      }
+
       resetForm()
       setIsModalOpen(false)
       await loadEntries()
     } catch (err) {
-      setError('Failed to create journal entry')
-      toast.error('Could not save entry')
+      setError(editingEntry ? 'Failed to update journal entry' : 'Failed to create journal entry')
+      toast.error(editingEntry ? 'Could not update entry' : 'Could not save entry')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleEditEntry = (entry) => {
+    setEditingEntry(entry)
+    setTitle(entry.title)
+    setContent(entry.content)
+    setMoodLabel(entry.mood_label)
+    setMoodScore(entry.mood_score)
+    setError('')
+    setIsModalOpen(true)
+  }
+
+  const handleDeleteEntry = async (entry) => {
+    const confirmed = window.confirm(`Delete "${entry.title}"?`)
+
+    if (!confirmed) return
+
+    try {
+      await deleteEntry(entry.id)
+      toast.success('Journal entry deleted')
+      await loadEntries()
+    } catch (err) {
+      toast.error('Could not delete entry')
     }
   }
 
@@ -103,7 +136,10 @@ function DashboardPage() {
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
               style={primaryActionStyle}
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => {
+                resetForm()
+                setIsModalOpen(true)
+              }}
             >
               New Entry
             </button>
@@ -160,7 +196,12 @@ function DashboardPage() {
                 </p>
               ) : (
                 entries.map((entry) => (
-                  <EntryCard key={entry.id} entry={entry} />
+                  <EntryCard
+                    key={entry.id}
+                    entry={entry}
+                    onEdit={handleEditEntry}
+                    onDelete={handleDeleteEntry}
+                  />
                 ))
               )}
             </div>
@@ -172,6 +213,7 @@ function DashboardPage() {
           onClose={() => {
             setIsModalOpen(false)
             setError('')
+            resetForm()
           }}
           title={title}
           setTitle={setTitle}
@@ -181,9 +223,10 @@ function DashboardPage() {
           setMoodLabel={setMoodLabel}
           moodScore={moodScore}
           setMoodScore={setMoodScore}
-          onSubmit={handleCreateEntry}
+          onSubmit={handleSubmitEntry}
           submitting={submitting}
           error={error}
+          mode={editingEntry ? 'edit' : 'create'}
         />
       </motion.div>
     </div>
