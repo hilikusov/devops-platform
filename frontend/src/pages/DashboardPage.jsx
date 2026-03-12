@@ -133,7 +133,7 @@ function DashboardPage() {
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             <button
               style={primaryActionStyle}
               onClick={() => {
@@ -238,19 +238,21 @@ const pageStyle = {
   width: '100%',
   background: '#0f172a',
   color: 'white',
-  padding: '40px'
+  padding: 'clamp(16px, 3vw, 40px)'
 }
 
 const topBarStyle = {
   display: 'flex',
   justifyContent: 'space-between',
-  alignItems: 'center',
-  marginBottom: '30px'
+  alignItems: 'flex-start',
+  gap: '16px',
+  marginBottom: '30px',
+  flexWrap: 'wrap'
 }
 
 const statsGridStyle = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
   gap: '18px',
   marginBottom: '24px'
 }
@@ -276,7 +278,7 @@ const statValueStyle = {
 
 const layoutStyle = {
   display: 'grid',
-  gridTemplateColumns: 'minmax(320px, 460px) 1fr',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
   gap: '24px',
   alignItems: 'start'
 }
@@ -293,7 +295,7 @@ const rightColumnStyle = {
 
 const cardStyle = {
   background: 'linear-gradient(180deg, rgba(30,41,59,0.96) 0%, rgba(15,23,42,0.96) 100%)',
-  padding: '24px',
+  padding: 'clamp(18px, 2vw, 24px)',
   borderRadius: '24px',
   border: '1px solid rgba(148,163,184,0.12)',
   boxShadow: '0 24px 60px rgba(0,0,0,0.28)',

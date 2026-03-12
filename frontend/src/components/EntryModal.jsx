@@ -82,9 +82,7 @@ function EntryModal({
                 </button>
 
                 <button type="submit" style={primaryButtonStyle} disabled={submitting}>
-                  {submitting
-                    ? (isEdit ? 'Saving...' : 'Saving...')
-                    : (isEdit ? 'Save Changes' : 'Save Entry')}
+                  {submitting ? 'Saving...' : isEdit ? 'Save Changes' : 'Save Entry'}
                 </button>
               </div>
             </form>
@@ -109,10 +107,12 @@ const overlayStyle = {
 const modalStyle = {
   width: '100%',
   maxWidth: '700px',
+  maxHeight: '90vh',
+  overflowY: 'auto',
   background: 'linear-gradient(180deg, rgba(30,41,59,0.98) 0%, rgba(15,23,42,0.98) 100%)',
   border: '1px solid rgba(148,163,184,0.12)',
   borderRadius: '24px',
-  padding: '24px',
+  padding: 'clamp(18px, 2vw, 24px)',
   boxShadow: '0 24px 80px rgba(0,0,0,0.35)'
 }
 
@@ -121,7 +121,8 @@ const headerStyle = {
   justifyContent: 'space-between',
   alignItems: 'flex-start',
   gap: '16px',
-  marginBottom: '20px'
+  marginBottom: '20px',
+  flexWrap: 'wrap'
 }
 
 const subTextStyle = {
@@ -164,7 +165,8 @@ const footerStyle = {
   display: 'flex',
   justifyContent: 'flex-end',
   gap: '12px',
-  marginTop: '18px'
+  marginTop: '18px',
+  flexWrap: 'wrap'
 }
 
 const primaryButtonStyle = {

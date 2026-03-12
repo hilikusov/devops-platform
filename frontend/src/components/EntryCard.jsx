@@ -60,7 +60,8 @@ function EntryCard({ entry, onEdit, onDelete }) {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '12px'
+          gap: '12px',
+          flexWrap: 'wrap'
         }}
       >
         <p
@@ -73,7 +74,7 @@ function EntryCard({ entry, onEdit, onDelete }) {
           {new Date(entry.created_at).toLocaleString()}
         </p>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button
             onClick={() => onEdit(entry)}
             style={secondaryActionStyle}
