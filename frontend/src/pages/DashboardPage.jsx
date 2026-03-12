@@ -1,12 +1,21 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { removeToken } from '../services/auth'
+import { removeToken, getUsernameFromToken } from '../services/auth'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { fetchEntries, createEntry, updateEntry, deleteEntry } from '../services/journal'
+
+import {
+  fetchEntries,
+  createEntry,
+  updateEntry,
+  deleteEntry,
+  fetchLatestInsight,
+} from '../services/journal'
+
 import EntryCard from '../components/EntryCard'
 import EntryModal from '../components/EntryModal'
 import MoodTrendChart from '../components/MoodTrendChart'
+import InsightCard from '../components/InsightCard'
 
 function DashboardPage() {
   const navigate = useNavigate()
@@ -17,17 +26,26 @@ function DashboardPage() {
   const [error, setError] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingEntry, setEditingEntry] = useState(null)
+  const [latestInsight, setLatestInsight] = useState(null)
 
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [moodLabel, setMoodLabel] = useState('calm')
   const [moodScore, setMoodScore] = useState(4)
 
+  const username = getUsernameFromToken()
+
   const loadEntries = async () => {
     try {
       setLoading(true)
-      const data = await fetchEntries()
-      setEntries(data)
+
+      const [entriesData, insightData] = await Promise.all([
+        fetchEntries(),
+        fetchLatestInsight(),
+      ])
+
+      setEntries(entriesData)
+      setLatestInsight(insightData)
     } catch (err) {
       setError('Failed to load entries')
     } finally {
@@ -76,7 +94,8 @@ function DashboardPage() {
         await updateEntry(editingEntry.id, payload)
         toast.success('Journal entry updated')
       } else {
-        await createEntry(payload)
+        const result = await createEntry(payload)
+        setLatestInsight(result.insight || null)
         toast.success('Journal entry saved')
       }
 
@@ -84,8 +103,17 @@ function DashboardPage() {
       setIsModalOpen(false)
       await loadEntries()
     } catch (err) {
-      setError(editingEntry ? 'Failed to update journal entry' : 'Failed to create journal entry')
-      toast.error(editingEntry ? 'Could not update entry' : 'Could not save entry')
+      setError(
+        editingEntry
+          ? 'Failed to update journal entry'
+          : 'Failed to create journal entry'
+      )
+
+      toast.error(
+        editingEntry
+          ? 'Could not update entry'
+          : 'Could not save entry'
+      )
     } finally {
       setSubmitting(false)
     }
@@ -115,10 +143,13 @@ function DashboardPage() {
     }
   }
 
-  const averageMood =
-    entries.length > 0
+  const recentEntries = entries.slice(0, 5)
+
+  const recentAverageMood =
+    recentEntries.length > 0
       ? (
-          entries.reduce((sum, entry) => sum + entry.mood_score, 0) / entries.length
+          recentEntries.reduce((sum, entry) => sum + entry.mood_score, 0) /
+          recentEntries.length
         ).toFixed(1)
       : null
 
@@ -131,9 +162,21 @@ function DashboardPage() {
             <p style={{ color: '#94a3b8', marginTop: '8px' }}>
               Your private mental journal
             </p>
+            {username && (
+              <p style={{ color: '#64748b', marginTop: '6px', fontSize: '14px' }}>
+                Signed in as {username}
+              </p>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <button
+              style={secondaryActionStyle}
+              onClick={() => navigate('/profile')}
+            >
+              Profile
+            </button>
+
             <button
               style={primaryActionStyle}
               onClick={() => {
@@ -157,8 +200,8 @@ function DashboardPage() {
           </div>
 
           <div style={statCardStyle}>
-            <p style={statLabelStyle}>Average mood</p>
-            <h2 style={statValueStyle}>{averageMood ?? '--'}</h2>
+            <p style={statLabelStyle}>Recent avg mood</p>
+            <h2 style={statValueStyle}>{recentAverageMood ?? '--'}</h2>
           </div>
 
           <div style={statCardStyle}>
@@ -171,6 +214,12 @@ function DashboardPage() {
 
         <div style={layoutStyle}>
           <div style={leftColumnStyle}>
+            {latestInsight && (
+              <div style={{ marginBottom: '24px' }}>
+                <InsightCard insight={latestInsight} />
+              </div>
+            )}
+
             <div style={cardStyle}>
               <h2 style={{ marginTop: 0, marginBottom: '8px' }}>Mood trend</h2>
               <p style={subTextStyle}>
@@ -183,7 +232,10 @@ function DashboardPage() {
 
           <div style={rightColumnStyle}>
             <div style={cardStyle}>
-              <h2 style={{ marginTop: 0, marginBottom: '8px' }}>Recent entries</h2>
+              <h2 style={{ marginTop: 0, marginBottom: '8px' }}>
+                Recent entries
+              </h2>
+
               <p style={subTextStyle}>
                 Review your recent reflections and track your emotional patterns.
               </p>
@@ -238,7 +290,7 @@ const pageStyle = {
   width: '100%',
   background: '#0f172a',
   color: 'white',
-  padding: 'clamp(16px, 3vw, 40px)'
+  padding: 'clamp(16px, 3vw, 40px)',
 }
 
 const topBarStyle = {
@@ -247,66 +299,68 @@ const topBarStyle = {
   alignItems: 'flex-start',
   gap: '16px',
   marginBottom: '30px',
-  flexWrap: 'wrap'
+  flexWrap: 'wrap',
 }
 
 const statsGridStyle = {
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
   gap: '18px',
-  marginBottom: '24px'
+  marginBottom: '24px',
 }
 
 const statCardStyle = {
-  background: 'linear-gradient(180deg, rgba(30,41,59,0.96) 0%, rgba(15,23,42,0.96) 100%)',
+  background:
+    'linear-gradient(180deg, rgba(30,41,59,0.96) 0%, rgba(15,23,42,0.96) 100%)',
   padding: '22px',
   borderRadius: '20px',
   border: '1px solid rgba(148,163,184,0.12)',
-  boxShadow: '0 18px 40px rgba(0,0,0,0.22)'
+  boxShadow: '0 18px 40px rgba(0,0,0,0.22)',
 }
 
 const statLabelStyle = {
   color: '#94a3b8',
   fontSize: '14px',
-  marginBottom: '10px'
+  marginBottom: '10px',
 }
 
 const statValueStyle = {
   margin: 0,
-  fontSize: '28px'
+  fontSize: '28px',
 }
 
 const layoutStyle = {
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
   gap: '24px',
-  alignItems: 'start'
+  alignItems: 'start',
 }
 
 const leftColumnStyle = {
   display: 'flex',
-  flexDirection: 'column'
+  flexDirection: 'column',
 }
 
 const rightColumnStyle = {
   display: 'flex',
-  flexDirection: 'column'
+  flexDirection: 'column',
 }
 
 const cardStyle = {
-  background: 'linear-gradient(180deg, rgba(30,41,59,0.96) 0%, rgba(15,23,42,0.96) 100%)',
+  background:
+    'linear-gradient(180deg, rgba(30,41,59,0.96) 0%, rgba(15,23,42,0.96) 100%)',
   padding: 'clamp(18px, 2vw, 24px)',
   borderRadius: '24px',
   border: '1px solid rgba(148,163,184,0.12)',
   boxShadow: '0 24px 60px rgba(0,0,0,0.28)',
-  backdropFilter: 'blur(10px)'
+  backdropFilter: 'blur(10px)',
 }
 
 const subTextStyle = {
   color: '#94a3b8',
   marginTop: 0,
   marginBottom: '22px',
-  lineHeight: 1.6
+  lineHeight: 1.6,
 }
 
 const primaryActionStyle = {
@@ -317,7 +371,16 @@ const primaryActionStyle = {
   color: '#020617',
   fontWeight: 700,
   cursor: 'pointer',
-  boxShadow: '0 12px 30px rgba(56,189,248,0.25)'
+}
+
+const secondaryActionStyle = {
+  padding: '12px 18px',
+  borderRadius: '14px',
+  border: '1px solid rgba(148,163,184,0.2)',
+  background: '#0f172a',
+  color: '#e2e8f0',
+  fontWeight: 600,
+  cursor: 'pointer',
 }
 
 const logoutButtonStyle = {
@@ -327,7 +390,7 @@ const logoutButtonStyle = {
   background: '#1e293b',
   color: '#e2e8f0',
   fontWeight: 600,
-  cursor: 'pointer'
+  cursor: 'pointer',
 }
 
 export default DashboardPage

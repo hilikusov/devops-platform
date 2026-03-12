@@ -23,3 +23,8 @@ export async function deleteEntry(entryId) {
   const response = await journalApi.delete(`/entries/${entryId}`)
   return response.data
 }
+
+export async function fetchLatestInsight() {
+  const response = await journalApi.get('/insights/latest')
+  return response.data.insight
+}

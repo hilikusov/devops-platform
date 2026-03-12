@@ -30,16 +30,19 @@ def get_entries(authorization: str = Header(None)):
         raise HTTPException(status_code=401, detail="Invalid authorization header")
 
     token = authorization.split(" ")[1]
-    verify_token(token)
+    username = verify_token(token)
 
     db = SessionLocal()
     try:
         REQUEST_COUNT.labels(endpoint="/entries_get").inc()
+
         entries = (
             db.query(JournalEntry)
+            .filter(JournalEntry.user_id == username)
             .order_by(JournalEntry.created_at.desc())
             .all()
         )
+
         return entries
     finally:
         db.close()
@@ -54,16 +57,54 @@ def get_entry(entry_id: int, authorization: str = Header(None)):
         raise HTTPException(status_code=401, detail="Invalid authorization header")
 
     token = authorization.split(" ")[1]
-    verify_token(token)
+    username = verify_token(token)
 
     db = SessionLocal()
     try:
-        entry = db.query(JournalEntry).filter(JournalEntry.id == entry_id).first()
+        entry = (
+            db.query(JournalEntry)
+            .filter(JournalEntry.id == entry_id)
+            .first()
+        )
 
         if not entry:
             raise HTTPException(status_code=404, detail="Entry not found")
 
+        if entry.user_id != username:
+            raise HTTPException(status_code=403, detail="Not allowed to access this entry")
+
         return entry
+    finally:
+        db.close()
+
+@router.get("/insights/latest")
+def get_latest_insight(authorization: str = Header(None)):
+    if authorization is None:
+        raise HTTPException(status_code=401, detail="Authorization header missing")
+
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+
+    token = authorization.split(" ")[1]
+    username = verify_token(token)
+
+    db = SessionLocal()
+    try:
+        recent_entries = (
+            db.query(JournalEntry)
+            .filter(JournalEntry.user_id == username)
+            .order_by(JournalEntry.created_at.desc())
+            .limit(5)
+            .all()
+        )
+
+        if not recent_entries:
+            return {"insight": None}
+
+        latest_entry = recent_entries[0]
+        insight = generate_rule_based_insight(latest_entry, list(reversed(recent_entries)))
+
+        return {"insight": insight}
     finally:
         db.close()
 
@@ -88,6 +129,7 @@ def create_entry(
     db = SessionLocal()
     try:
         entry = JournalEntry(
+            user_id=username,
             title=title,
             content=content,
             mood_score=mood_score,
@@ -102,6 +144,7 @@ def create_entry(
 
         recent_entries = (
             db.query(JournalEntry)
+            .filter(JournalEntry.user_id == username)
             .order_by(JournalEntry.created_at.desc())
             .limit(5)
             .all()
@@ -135,14 +178,21 @@ def update_entry(
         raise HTTPException(status_code=401, detail="Invalid authorization header")
 
     token = authorization.split(" ")[1]
-    verify_token(token)
+    username = verify_token(token)
 
     db = SessionLocal()
     try:
-        entry = db.query(JournalEntry).filter(JournalEntry.id == entry_id).first()
+        entry = (
+            db.query(JournalEntry)
+            .filter(JournalEntry.id == entry_id)
+            .first()
+        )
 
         if not entry:
             raise HTTPException(status_code=404, detail="Entry not found")
+
+        if entry.user_id != username:
+            raise HTTPException(status_code=403, detail="Not allowed to update this entry")
 
         entry.title = title
         entry.content = content
@@ -167,14 +217,21 @@ def delete_entry(entry_id: int, authorization: str = Header(None)):
         raise HTTPException(status_code=401, detail="Invalid authorization header")
 
     token = authorization.split(" ")[1]
-    verify_token(token)
+    username = verify_token(token)
 
     db = SessionLocal()
     try:
-        entry = db.query(JournalEntry).filter(JournalEntry.id == entry_id).first()
+        entry = (
+            db.query(JournalEntry)
+            .filter(JournalEntry.id == entry_id)
+            .first()
+        )
 
         if not entry:
             raise HTTPException(status_code=404, detail="Entry not found")
+
+        if entry.user_id != username:
+            raise HTTPException(status_code=403, detail="Not allowed to delete this entry")
 
         db.delete(entry)
         db.commit()
