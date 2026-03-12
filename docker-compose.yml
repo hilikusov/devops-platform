@@ -27,6 +27,15 @@ services:
     depends_on:
       - postgres
 
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - auth-service
+      - journal-service
+
   postgres:
     image: postgres:15
     container_name: auth-postgres
