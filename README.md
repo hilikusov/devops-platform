@@ -78,6 +78,6 @@ devops-platform/
 ## Next Planned Improvements
 
 * Prometheus monitoring - added
-* Grafana dashboards
+* Grafana dashboards - added
 * Kubernetes deployment
 * CI/CD pipeline
