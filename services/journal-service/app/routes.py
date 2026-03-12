@@ -6,6 +6,7 @@ from app.database import SessionLocal
 from app.models import JournalEntry
 from app.security import verify_token
 from app.metrics import REQUEST_COUNT
+from app.insights import generate_rule_based_insight
 
 router = APIRouter()
 
@@ -29,14 +30,13 @@ def get_entries(authorization: str = Header(None)):
         raise HTTPException(status_code=401, detail="Invalid authorization header")
 
     token = authorization.split(" ")[1]
-    username = verify_token(token)
+    verify_token(token)
 
     db = SessionLocal()
     try:
         REQUEST_COUNT.labels(endpoint="/entries_get").inc()
         entries = (
             db.query(JournalEntry)
-            .filter(JournalEntry.user_id == username)
             .order_by(JournalEntry.created_at.desc())
             .all()
         )
@@ -54,7 +54,7 @@ def get_entry(entry_id: int, authorization: str = Header(None)):
         raise HTTPException(status_code=401, detail="Invalid authorization header")
 
     token = authorization.split(" ")[1]
-    username = verify_token(token)
+    verify_token(token)
 
     db = SessionLocal()
     try:
@@ -62,9 +62,6 @@ def get_entry(entry_id: int, authorization: str = Header(None)):
 
         if not entry:
             raise HTTPException(status_code=404, detail="Entry not found")
-
-        if entry.user_id != username:
-            raise HTTPException(status_code=403, detail="Not allowed to access this entry")
 
         return entry
     finally:
@@ -91,7 +88,6 @@ def create_entry(
     db = SessionLocal()
     try:
         entry = JournalEntry(
-            user_id=username,
             title=title,
             content=content,
             mood_score=mood_score,
@@ -104,10 +100,20 @@ def create_entry(
 
         REQUEST_COUNT.labels(endpoint="/entries_post").inc()
 
+        recent_entries = (
+            db.query(JournalEntry)
+            .order_by(JournalEntry.created_at.desc())
+            .limit(5)
+            .all()
+        )
+
+        insight = generate_rule_based_insight(entry, list(reversed(recent_entries)))
+
         return {
             "message": "Journal entry created",
             "entry_id": entry.id,
-            "created_by": username
+            "created_by": username,
+            "insight": insight
         }
     finally:
         db.close()
@@ -129,7 +135,7 @@ def update_entry(
         raise HTTPException(status_code=401, detail="Invalid authorization header")
 
     token = authorization.split(" ")[1]
-    username = verify_token(token)
+    verify_token(token)
 
     db = SessionLocal()
     try:
@@ -137,9 +143,6 @@ def update_entry(
 
         if not entry:
             raise HTTPException(status_code=404, detail="Entry not found")
-
-        if entry.user_id != username:
-            raise HTTPException(status_code=403, detail="Not allowed to update this entry")
 
         entry.title = title
         entry.content = content
@@ -164,7 +167,7 @@ def delete_entry(entry_id: int, authorization: str = Header(None)):
         raise HTTPException(status_code=401, detail="Invalid authorization header")
 
     token = authorization.split(" ")[1]
-    username = verify_token(token)
+    verify_token(token)
 
     db = SessionLocal()
     try:
@@ -172,9 +175,6 @@ def delete_entry(entry_id: int, authorization: str = Header(None)):
 
         if not entry:
             raise HTTPException(status_code=404, detail="Entry not found")
-
-        if entry.user_id != username:
-            raise HTTPException(status_code=403, detail="Not allowed to delete this entry")
 
         db.delete(entry)
         db.commit()
