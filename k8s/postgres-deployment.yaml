@@ -34,3 +34,10 @@ spec:
                 configMapKeyRef:
                   name: app-config
                   key: DB_NAME
+          resources:
+            requests:
+              cpu: "150m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
