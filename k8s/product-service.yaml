@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: product-service
+  namespace: devops-platform
 spec:
   selector:
     app: product-service

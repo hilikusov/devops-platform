@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: auth-service
+  namespace: devops-platform
 spec:
   replicas: 1
   selector:
@@ -20,15 +21,30 @@ spec:
             - containerPort: 8000
           env:
             - name: DB_HOST
-              value: "postgres"
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_HOST
             - name: DB_PORT
-              value: "5432"
-            - name: DB_USER
-              value: "devuser"
-            - name: DB_PASSWORD
-              value: "devpass"
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_PORT
             - name: DB_NAME
-              value: "authdb"
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: DB_PASSWORD
           readinessProbe:
             httpGet:
               path: /health

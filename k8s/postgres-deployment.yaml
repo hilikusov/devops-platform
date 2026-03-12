@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres
+  namespace: devops-platform
 spec:
   replicas: 1
   selector:
@@ -19,8 +20,17 @@ spec:
             - containerPort: 5432
           env:
             - name: POSTGRES_USER
-              value: "devuser"
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: DB_USER
             - name: POSTGRES_PASSWORD
-              value: "devpass"
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: DB_PASSWORD
             - name: POSTGRES_DB
-              value: "authdb"
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_NAME
