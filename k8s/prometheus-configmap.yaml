@@ -15,8 +15,8 @@ data:
           - targets:
               - auth-service.devops-platform.svc.cluster.local:8000
 
-      - job_name: "product-service-k8s"
+      - job_name: "journal-service-k8s"
         metrics_path: /metrics
         static_configs:
           - targets:
-              - product-service.devops-platform.svc.cluster.local:8000
+              - journal-service.devops-platform.svc.cluster.local:8000

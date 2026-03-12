@@ -4,7 +4,7 @@ from app.database import engine
 from app.models import Base
 import time
 
-app = FastAPI(title="Product Service")
+app = FastAPI(title="Journal Service")
 
 for attempt in range(10):
     try:

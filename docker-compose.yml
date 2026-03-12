@@ -13,9 +13,9 @@ services:
     depends_on:
       - postgres
 
-  product-service:
-    build: ./services/product-service
-    container_name: product-service
+  journal-service:
+    build: ./services/journal-service
+    container_name: journal-service
     ports:
       - "8001:8000"
     environment:
@@ -48,7 +48,7 @@ services:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
     depends_on:
       - auth-service
-      - product-service
+      - journal-service
 
   grafana:
     image: grafana/grafana:latest

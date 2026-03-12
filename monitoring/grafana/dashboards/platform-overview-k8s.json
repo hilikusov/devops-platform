@@ -132,9 +132,9 @@
             "uid": "prometheus"
           },
           "editorMode": "builder",
-          "expr": "rate(product_requests_total[1m])",
+          "expr": "rate(journal_requests_total[1m])",
           "instant": false,
-          "legendFormat": "{{Product Requests}}",
+          "legendFormat": "{{Journal Requests}}",
           "range": true,
           "refId": "C"
         }

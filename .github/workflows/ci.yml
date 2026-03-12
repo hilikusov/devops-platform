@@ -16,5 +16,5 @@ jobs:
       - name: Build Auth Service image
         run: docker build -t auth-service ./services/auth-service
 
-      - name: Build Product Service image
-        run: docker build -t product-service ./services/product-service
+      - name: Build Journal Service image
+        run: docker build -t journal-service ./services/journal-service

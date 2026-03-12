@@ -7,7 +7,7 @@ scrape_configs:
     static_configs:
       - targets: ["auth-service:8000"]
 
-  - job_name: "product-service"
+  - job_name: "journal-service"
     metrics_path: /metrics
     static_configs:
-      - targets: ["product-service:8000"]
+      - targets: ["journal-service:8000"]
